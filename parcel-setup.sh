@@ -1,49 +1,43 @@
 #!/bin/bash
 
+################################################################################
+## @author      : Arno Lievens (arnolievens@gmail.com)                        ##
+## @file        : parcel-setup.sh                                             ##
+## @created     : Wednesday Jun 08                                            ##
+##                                                                            ##
+## @description : clone starter-kit repository and optionally set new remote  ##
+################################################################################
+
+
+#######
 # the url of the starterkit repository
+#
 starterkit_url="https://github.com/verhulstd/parcel2starterkit.git"
 
-# args
+
+#######
+# global vars
+#
 repo_path=""
 repo_url=""
+repo_name=""
+matrix=false
+nsfw=false
 
+
+#######
 # name of this script
+#
 pgm="$(basename "$0")"
 
 
 ################################################################################
-##                               functions                                    ##
+##                                 functions                                  ##
 ################################################################################
 
-error() {
-    echo "$@" >&2
-    exit 1
-}
-
-print_usage()
-{
-    printf "%s\n" \
-"usage: $pgm <local path> [new remote url]
-
-    clones David's parcel2starterkit into <local path> folder
-    sets name in package.json to foldername
-    activates .gitignore file
-    installs npm dependencies
-    sets new remote url if provided
-
-    make sure $pgm is in your PATH and executable (chmod +x $(basename "$0"))
-
-
-example: $pgm myProject https://github.com/kermit/myProject.git "
-}
-
-matrix_mode()
-{
-    LC_ALL=C tr -c "[:digit:]" " " < /dev/urandom \
-        | dd cbs="$(tput cols)" conv=unblock \
-        | GREP_COLOR="1;32" grep --color "[^ ]"
-}
-
+#######
+# obfuscated b(.)(.)bs
+#
 nsfw_mode()
 {
     echo \
@@ -197,64 +191,202 @@ ICAgICAgICAgTU1NTSBNTTo6OjptOm06TU0KICAgICAgICAgICAgICAgICAgICAgICAgICAgICAg
 ICAgIE1NOjo6Om06TU0KICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICBNTTo6OjpN
 TQogICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICBNTTo6TU0K
 ' | base64 -d
-
 }
+
+
+#######
+# print errors to stderr and exit with code 1
+#
+# @param errors
+#
+error() {
+    echo "$@" >&2
+    exit 1
+}
+
+
+#######
+# print usage menu
+#
+print_usage()
+{
+    printf "%s\n" \
+"usage: $pgm <local path> [new remote url]
+
+    clones David's parcel2starterkit into <local path> folder
+    sets name in package.json to foldername
+    activates .gitignore file
+    installs npm dependencies
+    sets new remote url if provided
+
+    make sure $pgm is in your PATH and executable (chmod +x $(basename "$0"))
+
+
+example: $pgm myProject https://github.com/kermit/myProject.git"
+}
+
+
+#######
+# print matrix-style animation
+#
+# @param bytes number of bytes to print
+#
+matrix_mode()
+{
+    local bytes="$1"
+    LC_ALL=C tr -c "[:digit:]" " " < /dev/urandom \
+        | dd bs=10 cbs="$(tput cols)" conv=unblock \
+        | head -c "$bytes" \
+        | GREP_COLOR="1;32" grep --color "[^ ]"
+}
+
+
+#######
+# parse arguments and set settings in global vars
+#
+# @global repo_path
+# @global repo_name
+# @global repo_url
+# @global matrix
+# @global nsfw
+# @param args
+#
+parse_args()
+{
+    args=$(getopt -n "$0" \
+        -o hmn \
+        --long help,matrix,nsfw -- \
+        "$@") || print_help
+
+    eval set -- "$args"
+
+    # option flags
+    while true; do
+        case "$1" in
+            "-h" | "--help") print_usage && exit 0 ;;
+            "-m" | "--matrix") matrix=true; shift ;;
+            "-n" | "--nsfw") nsfw=true; shift ;;
+            --) shift; break ;;
+            *) echo "DEBUG getopt failed: $1" ;;
+        esac
+    done
+
+    # remaining args - must be in proper order, url arg is optional
+    [ -n "$1" ] && repo_path="$1"
+    [ -n "$2" ] && repo_url="$2"
+    [ -n "$3" ] && error "invalid argument \"$3\" - type $pgm --help"
+
+    # at least the repo_path arg is required
+    [ -n "$repo_path" ] \
+        || error "please enter the local repo path, type $pgm -h for more info"
+    repo_name="$(basename "$repo_path")"
+}
+
+
+#######
+# set new git remote repository
+#
+# @param directory
+# @param repository url
+#
+git_set_url()
+{
+    local path="$1"
+    local url="$2"
+
+    if [ -n "$url" ]; then
+
+        # set the remote repository url for origin
+        git -C "$path" remote set-url origin "$url" \
+            || error "aborted setting new repo url"
+            # actual error printed by git
+
+        # ask git to print remote url
+        echo "set-url:"
+        git -C "$path" remote -v
+    fi
+}
+
+
+######
+# install npm dependencies from package.json
+#
+# @param directory
+#
+install_dependencies()
+{
+    local path="$1"
+
+    if [ -d "$path" ]; then
+
+        # make sure npm is installed
+        command -v npm > /dev/null \
+            || error "npm not installed, cannot install packages"
+
+        # run npm install from within path folder
+        # TODO: npm flag to install in directory instead of subshell + cd?
+        echo "installing npm dependencies"
+        (cd "$path" && npm install) \
+            || error "failed to install npm dependencies"
+    fi
+}
+
 
 ################################################################################
 ##                                    main                                    ##
 ################################################################################
 
-# parse args
-case "$1" in
-    --nsfw) nsfw_mode; exit 0 ;;
-    --matrix) matrix_mode; exit 0 ;;
-    -h | --help) print_usage; exit 0 ;;
-    -*) error "unknown option \"$1\"" ;;
-    *) repo_path="$1" ;;
-esac
+parse_args "$@"
+
 
 # this script is useless if git is not installed
-if ! which git > /dev/null; then error "please install git"; fi
+command -v git > /dev/null \
+        || error "git not installed, cannot clone repository"
 
-# at least the first argument is required
-[ -n "$repo_path" ] \
-    || error "please enter the local repo path, type $pgm -h for more info"
-repo_name="$(basename "$repo_path")"
 
 # complain if target folder or file exists
 [ -d "$repo_path" ] && error "\"$repo_path\" already exists"
 [ -f "$repo_path" ] && error "\"$repo_path\" is a file"
 
+
 # clone
-git clone "$starterkit_url" "$repo_path" \
+git clone --verbose "$starterkit_url" "$repo_path" \
     || error "aborted cloning"
+echo -e "\nsuccessfully cloned into \"$repo_path\""
 
 
 # replace "name" field in package.json
 sed -i "s/\"name\":.*/\"name\": \"$repo_name\",/" "$repo_path/package.json"
+echo "set repository name \"$repo_name\" in package.json"
 
-# clean readme.md
+
+# clean readme.md and set "name"
 echo "# $repo_name" > "$repo_path/readme.md"
+echo "set repository name \"$repo_name\" in readme.md"
 
-# remove leading '#' from .gitignore
+
+# unignore the .gitignore
 mv "$repo_path"/{\#,}.gitignore
-
 git -C "$repo_path" add .gitignore
+echo "activated .gitignore"
 
-# install npm packages
-echo "installing npm dependencies"
-(cd "$repo_path" && npm install)
 
-echo "Successfully cloned into $repo_path."
+# intermission
+if $nsfw; then nsfw_mode && sleep 3 && clear; fi
 
-# set new url (optional)
-if [ -n "$2" ]; then
-    repo_url="$2"
-    git -C "$repo_path" remote set-url origin "$repo_url" \
-        || error "aborted setting new repo url"
 
-    echo "set-url:"
-    git -C "$repo_path" remote -v
+# npm dependencies
+if $matrix; then
+    # npm install while we waste precious entropy
+    install_dependencies "$repo_path" &
+    matrix_mode 40000000
+    wait && clear
+else
+    install_dependencies "$repo_path"
 fi
+
+
+git_set_url "$repo_path" "$repo_url"
+
 
 exit 0
