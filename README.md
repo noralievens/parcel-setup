@@ -1,5 +1,12 @@
 ## parcel-setup.sh
 
+### install
+
+```
+cd ~/bin # or any other directory in your PATH
+wget https://raw.githubusercontent.com/arnolievens/parcel-setup/main/parcel-setup.sh -O parcel-setup
+```
+
 ### usage
 
 `parcel-setup.sh <local path> [new remote url]`
