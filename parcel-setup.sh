@@ -371,6 +371,10 @@ git -C "$repo_path" add .gitignore
 echo "activated .gitignore"
 
 
+# untrack .env files
+git -C "$repo_path" rm --cached .env.*
+
+
 # intermission
 if $nsfw; then nsfw_mode && sleep 3 && clear; fi
 

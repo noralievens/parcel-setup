@@ -5,6 +5,7 @@
 ```
 cd ~/bin # or any other directory in your PATH
 wget https://raw.githubusercontent.com/arnolievens/parcel-setup/main/parcel-setup.sh -O parcel-setup
+chmod u+x parcel-setup
 ```
 
 ### usage
