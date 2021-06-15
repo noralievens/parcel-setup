@@ -23,6 +23,7 @@ repo_url=""
 repo_name=""
 matrix=false
 nsfw=false
+branch_name=""
 
 
 #######
@@ -214,12 +215,19 @@ print_usage()
 "usage: $pgm <local path> [new remote url]
 
     clones David's parcel2starterkit into <local path> folder
+    optionally set new branch name (eg main)
     sets name in package.json to foldername
     activates .gitignore file
+    untrack .env. files
     installs npm dependencies
     sets new remote url if provided
 
     make sure $pgm is in your PATH and executable (chmod +x $(basename "$0"))
+
+
+options:
+
+    -b, --branch        rename master branch
 
 
 example: $pgm myProject https://github.com/kermit/myProject.git"
@@ -254,8 +262,8 @@ matrix_mode()
 parse_args()
 {
     args=$(getopt -n "$0" \
-        -o hmn \
-        --long help,matrix,nsfw -- \
+        -o b:hmn \
+        --long branch:,help,matrix,nsfw -- \
         "$@") || print_help
 
     eval set -- "$args"
@@ -263,6 +271,12 @@ parse_args()
     # option flags
     while true; do
         case "$1" in
+            "-b" | "--branch")
+                [ -n "$2" ] \
+                    || error "provide branch name when using --branch option"
+                branch_name="$2"
+                shift 2
+                ;;
             "-h" | "--help") print_usage && exit 0 ;;
             "-m" | "--matrix") matrix=true; shift ;;
             "-n" | "--nsfw") nsfw=true; shift ;;
@@ -354,6 +368,7 @@ git clone --verbose "$starterkit_url" "$repo_path" \
     || error "aborted cloning"
 echo -e "\nsuccessfully cloned into \"$repo_path\""
 
+[ -n "$branch_name" ] && git -C "$repo_path" branch -m "$branch_name"
 
 # replace "name" field in package.json
 sed -i "s/\"name\":.*/\"name\": \"$repo_name\",/" "$repo_path/package.json"
