@@ -15,6 +15,7 @@ curl https://raw.githubusercontent.com/arnolievens/parcel-setup/main/parcel-setu
 + clones David's parcel2starterkit into `<local path>` folder
 + sets name in package.json to foldername
 + activates .gitignore file
++ untrack .env. files
 + installs npm dependencies
 + sets new remote url if provided
 
