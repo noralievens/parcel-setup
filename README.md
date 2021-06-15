@@ -1,4 +1,4 @@
-## parcel-setup.sh
+## parcel-setup
 
 ### install
 
