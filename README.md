@@ -2,15 +2,15 @@
 
 ### install
 
+download parcel-setup into any folder in your PATH, eg ~/bin or ~/.local/bin
 ```
-cd ~/bin # or any other directory in your PATH
-wget https://raw.githubusercontent.com/arnolievens/parcel-setup/main/parcel-setup.sh -O parcel-setup
-chmod u+x parcel-setup
+cd ~/bin
+curl https://raw.githubusercontent.com/arnolievens/parcel-setup/main/parcel-setup.sh -o parcel-setup && chmod u+x !$
 ```
 
 ### usage
 
-`parcel-setup.sh <local path> [new remote url]`
+`parcel-setup <local path> [new remote url]`
 
 + clones David's parcel2starterkit into `<local path>` folder
 + sets name in package.json to foldername
@@ -18,8 +18,6 @@ chmod u+x parcel-setup
 + installs npm dependencies
 + sets new remote url if provided
 
-make sure parcel-setup.sh is in your PATH and executable (chmod +x parcel-setup.sh)<br>
-
 ### example
-`parcel-setup.sh myProject https://github.com/kermit/myProject.git`
+`parcel-setup myProject https://github.com/kermit/myProject.git`
 
