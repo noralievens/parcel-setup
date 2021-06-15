@@ -5,7 +5,7 @@
 download parcel-setup into any folder in your PATH, eg ~/bin or ~/.local/bin
 ```
 cd ~/bin
-curl https://raw.githubusercontent.com/arnolievens/parcel-setup/main/parcel-setup.sh -o parcel-setup && chmod u+x !$
+curl https://raw.githubusercontent.com/arnolievens/parcel-setup/main/parcel-setup.sh -o parcel-setup && chmod u+x $_
 ```
 
 ### usage
