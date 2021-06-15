@@ -26,5 +26,5 @@ options:<br>
 
 
 ### example
-`parcel-setup myProject https://github.com/kermit/myProject.git`
+`parcel-setup myProject https://github.com/kermit/myProject.git --branch main`
 
