@@ -250,6 +250,18 @@ matrix_mode()
 
 
 #######
+# validate git URI
+#
+# @param uri
+# @return true if valid git URI
+validate_uri()
+{
+    local git_regex='((git|ssh|http(s)?)|(git@[\w\.]+))(:(//)?)([\w\.@\:/\-~]+)(\.git)(/)?'
+    grep -Pq "$git_regex" <<< "$1"
+}
+
+
+#######
 # parse arguments and set settings in global vars
 #
 # @global repo_path
@@ -257,10 +269,13 @@ matrix_mode()
 # @global repo_url
 # @global matrix
 # @global nsfw
+# @global branch_name
 # @param args
 #
 parse_args()
 {
+
+
     args=$(getopt -n "$0" \
         -o b:hmn \
         --long branch:,help,matrix,nsfw -- \
@@ -293,6 +308,11 @@ parse_args()
     # at least the repo_path arg is required
     [ -n "$repo_path" ] \
         || error "please enter the local repo path, type $pgm -h for more info"
+
+    # make sure repo_path is not a remote address
+    validate_uri "$repo_path" \
+        && error "first argument should be a directory, not a git remote"
+
     repo_name="$(basename "$repo_path")"
 }
 
@@ -309,6 +329,9 @@ git_set_url()
     local url="$2"
 
     if [ -n "$url" ]; then
+
+        validate_uri "$url" \
+            || error "\"$url\" is not a valid git repository URI"
 
         # set the remote repository url for origin
         git -C "$path" remote set-url origin "$url" \
