@@ -274,8 +274,6 @@ validate_uri()
 #
 parse_args()
 {
-
-
     args=$(getopt -n "$0" \
         -o b:hmn \
         --long branch:,help,matrix,nsfw -- \
@@ -412,6 +410,8 @@ echo "activated .gitignore"
 # untrack .env files
 git -C "$repo_path" rm --cached .env.*
 
+# set new repo url
+git_set_url "$repo_path" "$repo_url"
 
 # intermission
 if $nsfw; then nsfw_mode && sleep 3 && clear; fi
@@ -426,9 +426,5 @@ if $matrix; then
 else
     install_dependencies "$repo_path"
 fi
-
-
-git_set_url "$repo_path" "$repo_url"
-
 
 exit 0
